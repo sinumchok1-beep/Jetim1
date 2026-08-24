@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เจ๊ติ๋มอะไหล่ซิ่ง</title>
+<style>
+body{font-family:Arial;background:#eef3f8;margin:0}
+header{background:#003b8e;color:#fff;padding:14px;font-size:22px;font-weight:bold}
+.wrap{max-width:900px;margin:auto;padding:12px}
+.card{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px}
+input,button{width:100%;padding:10px;margin:5px 0;border-radius:8px;border:1px solid #ccc;box-sizing:border-box}
+button{background:#0057d9;color:#fff;border:none;font-weight:bold}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.item{border:1px solid #ddd;padding:10px;border-radius:10px;margin-top:8px}
+.total{font-size:24px;color:#d32f2f;font-weight:bold}
+#bill{display:none}
+@media print{
+ body *{visibility:hidden}
+ #bill,#bill *{visibility:visible}
+ #bill{display:block;position:absolute;left:0;top:0;width:58mm;font-size:12px}
+}
+</style>
+</head>
+<body>
+<header>🚗 เจ๊ติ๋มอะไหล่ซิ่ง</header>
+<div class="wrap">
+
+<div class="card">
+<h3>เพิ่มสินค้า</h3>
+<input id="name" placeholder="ชื่ออะไหล่">
+<div class="grid">
+<input id="brand" placeholder="ยี่ห้อรถ">
+<input id="model" placeholder="รุ่นรถ">
+</div>
+<div class="grid">
+<input id="year" placeholder="ปีรถ">
+<input id="cost" type="number" placeholder="ราคาทุน">
+</div>
+<div class="grid">
+<input id="price" type="number" placeholder="ราคาขาย">
+<input id="stock" type="number" placeholder="สต็อก">
+</div>
+<button onclick="addProduct()">บันทึกสินค้า</button>
+</div>
+
+<div class="card">
+<h3>ค้นหาสินค้า</h3>
+<input id="search" placeholder="พิมพ์บางคำได้" oninput="showProducts()">
+<div id="products"></div>
+</div>
+
+<div class="card">
+<h3>🧾 ออกบิลเงินสด</h3>
+<input id="customer" placeholder="ชื่อลูกค้า (ไม่บังคับ)">
+<div id="cart"></div>
+<div class="total" id="grandTotal">รวม 0 บาท</div>
+<button onclick="printBill()">🖨️ ออกบิลเงินสด 58mm</button>
+</div>
+
+<div id="bill"></div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBxAvtwNS-cp7FQe7VNAmhVw8EkIZMqERk",
+  authDomain: "jetim1.firebaseapp.com",
+  projectId: "jetim1",
+  storageBucket: "jetim1.firebasestorage.app",
+  messagingSenderId: "292145519962",
+  appId: "1:292145519962:web:d30606033e54db6d966763",
+  measurementId: "G-XFYX6HE6XH"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+let items = [];
+let cart = [];
+let ready = false;
+
+async function initOnline(){
+  try{
+    await firebase.auth().signInAnonymously();
+    const snap = await db.collection("products").orderBy("createdAt").get();
+    items = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    ready = true;
+    showProducts();
+  }catch(err){
+    console.error(err);
+    alert("เชื่อมต่อฐานข้อมูลไม่ได้ กรุณาเปิด Firestore และ Anonymous Sign-in ใน Firebase ก่อน");
+  }
+}
+
+async function save(){
+  if(!ready) return;
+  try{
+    const batch = db.batch();
+    const currentIds = new Set(items.map(p=>p.id));
+    const old = await db.collection("products").get();
+    old.forEach(doc=>{
+      if(!currentIds.has(doc.id)) batch.delete(doc.ref);
+    });
+    items.forEach(p=>{
+      const data = {...p};
+      delete data.id;
+      batch.set(db.collection("products").doc(p.id), data, {merge:true});
+    });
+    await batch.commit();
+    showProducts();
+  }catch(err){
+    console.error(err);
+    alert("บันทึกข้อมูลออนไลน์ไม่สำเร็จ: " + err.message);
+  }
+}
+
+async function addProduct(){
+  if(!ready){ alert("กำลังเชื่อมต่อฐานข้อมูล รอสักครู่"); return; }
+  const n=document.getElementById("name").value.trim();
+  if(!n){ alert("กรอกชื่อสินค้า"); return; }
+  const ref = db.collection("products").doc();
+  const product = {
+    id: ref.id,
+    name:n,
+    brand:document.getElementById("brand").value,
+    model:document.getElementById("model").value,
+    year:document.getElementById("year").value,
+    cost:Number(document.getElementById("cost").value)||0,
+    price:Number(document.getElementById("price").value)||0,
+    stock:Number(document.getElementById("stock").value)||0,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  items.push(product);
+  await save();
+  document.querySelectorAll("input").forEach(i=>{
+    if(i.id!=="search" && i.id!=="customer") i.value="";
+  });
+}
+
+async function stock(i,v){
+  items[i].stock=Math.max(0, items[i].stock+v);
+  await save();
+}
+
+function normalizeText(text){
+  return (text||"").toLowerCase()
+    .replace(/โตโยต้า/g,"toyota")
+    .replace(/วีโก้/g,"vigo")
+    .replace(/อีซูซุ/g,"isuzu")
+    .replace(/ฮอนด้า/g,"honda")
+    .replace(/d-max/g,"dmax")
+    .replace(/[^a-z0-9ก-๙]+/g,"");
+}
+
+function showProducts(){
+  if(!document.getElementById("search")) return;
+  const keyRaw=document.getElementById("search").value;
+  const key=normalizeText(keyRaw);
+  let html="";
+  items.forEach((p,i)=>{
+    const text=normalizeText(p.name+" "+p.brand+" "+p.model+" "+p.year);
+    let ok=!key || text.includes(key);
+    if(key){
+      const rawWords = keyRaw.toLowerCase()
+        .replace(/โตโยต้า/g,"toyota")
+        .replace(/วีโก้/g,"vigo")
+        .replace(/อีซูซุ/g,"isuzu")
+        .replace(/ฮอนด้า/g,"honda")
+        .replace(/d-max/g,"dmax")
+        .match(/[a-z0-9ก-๙]+/g) || [];
+      ok = rawWords.every(word => normalizeText(text).includes(normalizeText(word)));
+    }
+    if(ok){
+      html+=`<div class="item">
+        <b>${p.name}</b><br>
+        🚘 ${p.brand||""} ${p.model||""} ปี ${p.year||""}<br>
+        ต้นทุน ${p.cost} | ขาย ${p.price}<br>
+        คงเหลือ ${p.stock} ชิ้น
+        <div class="grid">
+          <button onclick="stock(${i},1)">+1</button>
+          <button onclick="stock(${i},5)">+5</button>
+        </div>
+        <button onclick="addCart(${i})">➕ เพิ่มลงบิล</button>
+        <button onclick="deleteProduct(${i})" style="background:#d32f2f">🗑️ ลบสินค้า</button>
+      </div>`;
+    }
+  });
+  document.getElementById("products").innerHTML=html||"ไม่มีสินค้า";
+}
+
+function deleteProduct(i){
+  const p=items[i];
+  if(!p) return;
+
+  const ok=confirm(
+    "ยืนยันการลบสินค้า?\n\n" +
+    "สินค้า: " + p.name + "\n" +
+    "ยี่ห้อ: " + (p.brand || "-") + "\n" +
+    "รุ่นรถ: " + (p.model || "-") + "\n" +
+    "ปีรถ: " + (p.year || "-") + "\n\n" +
+    "เมื่อลบแล้ว สินค้านี้จะหายออกจากสต็อก"
+  );
+  if(!ok) return;
+
+  cart = cart.filter(c => c.id !== i);
+  cart.forEach(c => { if(c.id > i) c.id--; });
+  items.splice(i,1);
+  save();
+  drawCart();
+}
+
+function addCart(i){
+  if(items[i].stock<1){ alert("สต็อกไม่พอ"); return; }
+  const found=cart.find(c=>c.id===i);
+  if(found){ if(found.qty<items[i].stock) found.qty++; }
+  else cart.push({id:i,qty:1});
+  drawCart();
+}
+
+function drawCart(){
+  let total=0, html="";
+  cart.forEach((c,index)=>{
+    const p=items[c.id];
+    const sum=p.price*c.qty;
+    total+=sum;
+    html += `<div class="item">
+      ${p.name}<br>
+      ${c.qty} × ${p.price} = <b>${sum}</b>
+      <div style="margin-top:6px;font-size:14px;color:#555">
+        🚘 ยี่ห้อ: ${p.brand || "-"}<br>
+        รุ่นรถ: ${p.model || "-"}<br>
+        ปีรถ: ${p.year || "-"}<br>
+        ราคาขายต่อชิ้น: ${p.price} บาท<br>
+        คงเหลือในสต็อก: ${p.stock} ชิ้น
+      </div>
+      <div class="grid">
+        <button onclick="qtyChange(${index},-1)">-1</button>
+        <button onclick="qtyChange(${index},1)">+1</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById("cart").innerHTML=html||"ยังไม่มีสินค้าในบิล";
+  document.getElementById("grandTotal").innerText="รวม "+total+" บาท";
+  const previewEl=document.getElementById("billPreview");
+  if(previewEl) previewEl.innerHTML="";
+}
+
+function qtyChange(i,v){
+  const c=cart[i], p=items[c.id];
+  if(v>0 && c.qty>=p.stock){ alert("สต็อกไม่พอ"); return; }
+  c.qty+=v;
+  if(c.qty<=0) cart.splice(i,1);
+  drawCart();
+}
+
+async function printBill(){
+  if(cart.length===0){ alert("ยังไม่มีสินค้าในบิล"); return; }
+  let total=0;
+  let billHTML="<center><b>เจ๊ติ๋มอะไหล่ซิ่ง</b><br>บิลเงินสด</center><hr>";
+  billHTML += new Date().toLocaleString("th-TH") + "<br>";
+  const customer=document.getElementById("customer").value.trim();
+  if(customer) billHTML += "ลูกค้า : " + customer + "<hr>";
+  cart.forEach(c=>{
+    const p=items[c.id], sum=p.price*c.qty;
+    total+=sum;
+    p.stock-=c.qty;
+    billHTML += `${p.name}<br>`;
+    billHTML += `รุ่นรถ : ${p.model||"-"} | ปี : ${p.year||"-"}<br>`;
+    billHTML += `${c.qty} × ${p.price} = ${sum}<br>`;
+  });
+  billHTML += `<hr><b>ยอดรวม ${total} บาท</b><br><center>ขอบคุณค่ะ</center>`;
+  document.getElementById("bill").innerHTML=billHTML;
+  document.getElementById("bill").style.display="block";
+  await save();
+  window.print();
+  document.getElementById("bill").style.display="none";
+  cart=[];
+  drawCart();
+}
+
+initOnline();
+</script>
+</body>
+</html>
