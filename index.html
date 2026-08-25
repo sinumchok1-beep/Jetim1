@@ -7,108 +7,129 @@
 <title>เจ๊ติ๋มอะไหล่ซิ่ง</title>
 <style>
 *{box-sizing:border-box}
-body{font-family:Arial,'Noto Sans Thai',sans-serif;background:#f3f5f8;margin:0;color:#263238}
-header{background:#123b63;color:#fff;padding:14px 18px;font-size:22px;font-weight:700;box-shadow:0 2px 8px #0002}
-.wrap{max-width:1200px;margin:auto;padding:14px}
-.pos-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,.85fr);gap:14px;align-items:start}
-.card{background:#fff;border:1px solid #e1e6eb;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 8px #0000000a}
-.card h3{margin:0 0 12px;font-size:18px}
-.section-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.muted{font-size:13px;color:#68747d}
-input,button{width:100%;padding:11px;margin:4px 0;border-radius:9px;border:1px solid #ccd4db;box-sizing:border-box;font-size:15px}
-input:focus{outline:2px solid #b8d6f5;border-color:#3787d8}
-button{background:#1266b1;color:#fff;border:none;font-weight:700;cursor:pointer}
-button:hover{filter:brightness(.96)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.item{border:1px solid #e0e5ea;padding:11px;border-radius:10px;margin-top:8px;background:#fbfcfd}
-.item b{font-size:16px}
-.product-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
-.product-actions button:last-child{grid-column:1/-1}
-.cart-card{position:sticky;top:10px}
-#cart{max-height:54vh;overflow:auto;padding-right:2px}
-#cart .item{background:#f8fbff;border-color:#d8e7f5}
-.total-box{border-top:2px solid #e8edf2;margin-top:12px;padding-top:12px}
-.total{font-size:25px;color:#d32f2f;font-weight:800;text-align:right;margin:4px 0 10px}
-.customer-label{font-size:13px;font-weight:700;color:#4d5962;margin-top:8px;display:block}
-.primary-bill{font-size:17px;padding:13px;background:#0b7a45}
-.search-card{margin-bottom:14px}
-.add-card{margin-top:0}
-#products{max-height:58vh;overflow:auto}
-.danger{background:#d32f2f!important}
-.edit{background:#f57c00!important}
+:root{--navy:#163b5c;--blue:#1671c9;--blue2:#eaf4ff;--line:#e1e7ed;--bg:#f4f6f8;--text:#24313b;--muted:#74808a;--green:#14824a;--red:#d73737}
+body{font-family:Arial,'Noto Sans Thai',sans-serif;background:var(--bg);margin:0;color:var(--text)}
+.topbar{height:68px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 10px #0002}
+.brand{display:flex;align-items:center;gap:11px}.brand-icon{font-size:28px}.brand-name{font-size:20px;font-weight:800}.brand-sub{font-size:12px;opacity:.75;margin-top:2px}
+.status{font-size:13px;background:#ffffff16;border:1px solid #ffffff22;padding:7px 11px;border-radius:20px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#48d487;margin-right:6px}
+.app{max-width:1400px;margin:auto;padding:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 8px #0000000a}
+.sale-bar{display:grid;grid-template-columns:1fr 1.2fr .9fr 190px;gap:14px;align-items:center;padding:14px 16px;margin-bottom:14px}
+.sale-title{font-size:19px;font-weight:800}.sale-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.sale-customer{display:flex;align-items:center;gap:8px}.sale-customer label{font-size:13px;font-weight:700;white-space:nowrap}
+input{height:42px;border:1px solid #ccd5dd;border-radius:8px;padding:0 12px;font-size:14px;background:#fff;width:100%}
+input:focus{outline:2px solid #b9daf7;border-color:var(--blue)}
+.sale-total{display:flex;justify-content:flex-end;align-items:center;gap:10px}.sale-total span{font-size:12px;color:var(--muted)}.sale-total strong{font-size:22px;color:var(--red)}
+button{border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px}
+.checkout{height:44px;background:var(--green);color:#fff;padding:0 16px}.checkout:hover{filter:brightness(.95)}.checkout.big{width:100%;height:48px;font-size:16px}
+.workspace{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(330px,.8fr);gap:14px;align-items:start}
+.products-panel,.cart-panel,.inventory-panel{padding:16px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.panel-head.compact{margin-bottom:10px}
+.panel-head h2{font-size:18px;margin:0}.panel-head p{font-size:12px;color:var(--muted);margin:4px 0 0}
+.shortcut{font-size:12px;color:var(--blue);background:var(--blue2);padding:7px 10px;border-radius:7px}
+.search-wrap{display:flex;align-items:center;gap:8px;background:#f7f9fb;border:1px solid var(--line);border-radius:9px;padding:0 10px;margin-bottom:12px}.search-wrap input{border:0;background:transparent;height:46px;padding-left:2px}.search-wrap input:focus{outline:0}
+.product-list{max-height:570px;overflow:auto;padding-right:2px}
+.item{border:1px solid var(--line);border-radius:9px;padding:11px;margin:7px 0;background:#fff}.item:hover{border-color:#b8d5ee;background:#fbfdff}
+.item b{font-size:15px}.item .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}
+.item button{height:36px;background:#eaf4ff;color:#1266b1}.item button:hover{background:#dceeff}
+.product-actions{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;margin-top:7px}.product-actions button{color:#fff;background:var(--blue)}.product-actions .edit{background:#ee8a18}.product-actions .danger{background:var(--red)}
+.cart-panel{position:sticky;top:10px}.cart-list{min-height:150px;max-height:440px;overflow:auto}.cart-list .item{background:#f8fbff;border-color:#d9e7f3}.cart-list .item button{background:#dceeff;color:#1266b1}
+.cart-footer{border-top:1px solid var(--line);margin-top:10px;padding-top:12px}.sum-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.sum-row span{color:var(--muted)}.sum-row strong{font-size:25px;color:var(--red)}
+.inventory-panel{margin-top:14px}.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.save-product{height:42px;background:var(--blue);color:#fff}
+.muted{color:var(--muted);font-size:13px}
 #bill{display:none}
-@media(max-width:850px){
-  .pos-layout{grid-template-columns:1fr}
-  .cart-card{position:static}
-  #cart{max-height:none}
-  #products{max-height:none}
-}
-@media print{
-  body *{visibility:hidden}
-  #bill,#bill *{visibility:visible}
-  #bill{display:block;position:absolute;left:0;top:0;width:58mm;font-size:12px}
-}
+@media(max-width:1050px){.sale-bar{grid-template-columns:1fr 1fr}.sale-total{justify-content:flex-start}.workspace{grid-template-columns:1fr}.cart-panel{position:static}}
+@media(max-width:650px){.app{padding:9px}.topbar{padding:0 13px}.status{display:none}.sale-bar{grid-template-columns:1fr;padding:12px}.sale-customer{display:block}.sale-customer label{display:block;margin-bottom:5px}.sale-total{justify-content:space-between}.checkout{width:100%}.form-grid{grid-template-columns:1fr 1fr}.product-list{max-height:none}}
+@media print{body *{visibility:hidden}#bill,#bill *{visibility:visible}#bill{display:block;position:absolute;left:0;top:0;width:58mm;font-size:12px}}
 </style>
 </head>
 <body>
-<header>🚗 เจ๊ติ๋มอะไหล่ซิ่ง <span style="font-size:13px;font-weight:400;opacity:.85">POS ขายหน้าร้าน</span></header>
-<div class="wrap">
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon">🚗</div>
+    <div>
+      <div class="brand-name">เจ๊ติ๋มอะไหล่ซิ่ง</div>
+      <div class="brand-sub">ระบบขายหน้าร้าน POS</div>
+    </div>
+  </div>
+  <div class="status"><span class="dot"></span> พร้อมขาย</div>
+</header>
 
-    <!-- ฝั่งขวา: บิล -->
-    <aside>
-      <div class="card cart-card">
-        <div class="section-title">
-          <h3>🧾 บิลขาย</h3>
-          <span class="muted">รายการปัจจุบัน</span>
+<div class="app">
+
+  <!-- บิลปัจจุบัน -->
+  <section class="sale-bar card">
+    <div class="sale-left">
+      <div class="sale-title">🧾 บิลขาย</div>
+      <div class="sale-meta">รายการสินค้าที่เลือก</div>
+    </div>
+    <div class="sale-customer">
+      <label for="customer">ลูกค้า</label>
+      <input id="customer" placeholder="ชื่อลูกค้า (ไม่บังคับ)">
+    </div>
+    <div class="sale-total">
+      <span>ยอดรวม</span>
+      <strong id="grandTotal">รวม 0 บาท</strong>
+    </div>
+    <button class="checkout" onclick="printBill()">🖨️ ออกบิล 58mm</button>
+  </section>
+
+  <section class="workspace">
+
+    <!-- สินค้า -->
+    <main class="products-panel card">
+      <div class="panel-head">
+        <div>
+          <h2>สินค้า</h2>
+          <p>ค้นหาอะไหล่แล้วเพิ่มลงบิล</p>
         </div>
-        <label class="customer-label" for="customer">ชื่อลูกค้า (ไม่บังคับ)</label>
-        <input id="customer" placeholder="ระบุชื่อลูกค้า">
-        <div id="cart"></div>
-        <div class="total-box">
-          <div class="total" id="grandTotal">รวม 0 บาท</div>
-          <button class="primary-bill" onclick="printBill()">🖨️ ออกบิลเงินสด 58mm</button>
+        <div class="shortcut">🔎 ค้นหาเร็ว</div>
+      </div>
+
+      <div class="search-wrap">
+        <span>🔍</span>
+        <input id="search" placeholder="ค้นหาชื่ออะไหล่ / ยี่ห้อ / รุ่น / ปีรถ" oninput="showProducts()" autofocus>
+      </div>
+
+      <div id="products" class="product-list"></div>
+    </main>
+
+    <!-- บิล -->
+    <aside class="cart-panel card">
+      <div class="panel-head compact">
+        <div>
+          <h2>รายการในบิล</h2>
+          <p>ตรวจสอบจำนวนก่อนออกบิล</p>
         </div>
+      </div>
+      <div id="cart" class="cart-list"></div>
+      <div class="cart-footer">
+        <div class="sum-row"><span>ยอดสุทธิ</span><strong id="grandTotal2">0 บาท</strong></div>
+        <button class="checkout big" onclick="printBill()">🖨️ ออกบิลเงินสด</button>
       </div>
     </aside>
 
-  <div class="pos-layout">
+  </section>
 
-    <!-- ฝั่งซ้าย: ค้นหา + รายการสินค้า + เพิ่มสินค้า -->
-    <main>
-      <div class="card search-card">
-        <div class="section-title">
-          <h3>🔎 ค้นหาสินค้า</h3>
-          <span class="muted">ค้นด้วยชื่อ / ยี่ห้อ / รุ่น / ปี</span>
-        </div>
-        <input id="search" placeholder="พิมพ์บางคำได้ เช่น D-Max, Vigo, Toyota" oninput="showProducts()" autofocus>
-        <div id="products"></div>
+  <!-- จัดการสินค้า -->
+  <section class="card inventory-panel">
+    <div class="panel-head compact">
+      <div>
+        <h2>⚙️ จัดการสินค้า</h2>
+        <p>เพิ่มสินค้าใหม่และกำหนดต้นทุน ราคาขาย และสต็อก</p>
       </div>
-
-      <div class="card add-card">
-        <div class="section-title">
-          <h3>➕ เพิ่มสินค้า</h3>
-          <span class="muted">ข้อมูลสินค้าและสต็อก</span>
-        </div>
-        <input id="name" placeholder="ชื่ออะไหล่">
-        <div class="grid">
-          <input id="brand" placeholder="ยี่ห้อรถ">
-          <input id="model" placeholder="รุ่นรถ">
-        </div>
-        <div class="grid">
-          <input id="year" placeholder="ปีรถ">
-          <input id="cost" type="number" placeholder="ราคาทุน">
-        </div>
-        <div class="grid">
-          <input id="price" type="number" placeholder="ราคาขาย">
-          <input id="stock" type="number" placeholder="สต็อก">
-        </div>
-        <button onclick="addProduct()">💾 บันทึกสินค้า</button>
-      </div>
-    </main>
-
-
-
-  </div>
+    </div>
+    <div class="form-grid">
+      <input id="name" placeholder="ชื่ออะไหล่">
+      <input id="brand" placeholder="ยี่ห้อรถ">
+      <input id="model" placeholder="รุ่นรถ">
+      <input id="year" placeholder="ปีรถ">
+      <input id="cost" type="number" placeholder="ราคาทุน">
+      <input id="price" type="number" placeholder="ราคาขาย">
+      <input id="stock" type="number" placeholder="สต็อก">
+      <button class="save-product" onclick="addProduct()">💾 บันทึกสินค้า</button>
+    </div>
+  </section>
 
   <div id="bill"></div>
 </div>
@@ -290,6 +311,11 @@ function addCart(i){
   drawCart();
 }
 
+function syncPosTotal(){
+  const src=document.getElementById("grandTotal");
+  const dst=document.getElementById("grandTotal2");
+  if(src && dst) dst.innerText=(src.innerText||"").replace(/^รวม\\s*/,"");
+}
 function drawCart(){
   let total=0, html="";
   cart.forEach((c,index)=>{
@@ -313,7 +339,7 @@ function drawCart(){
     </div>`;
   });
   document.getElementById("cart").innerHTML=html||"<div class=\"muted\" style=\"padding:18px 4px;text-align:center\">ยังไม่มีสินค้าในบิล<br>เลือกสินค้าแล้วกด “เพิ่มลงบิล”</div>";
-  document.getElementById("grandTotal").innerText="รวม "+total+" บาท";
+  document.getElementById("grandTotal").innerText="รวม "+total+" บาท"; syncPosTotal();
   const previewEl=document.getElementById("billPreview");
   if(previewEl) previewEl.innerHTML="";
 }
