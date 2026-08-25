@@ -310,16 +310,28 @@ function drawCart(){
     const sum = unitPrice * c.qty;
     total += sum;
 
-    html += `<div class="item">
-      <b>${p.name}</b><br>
-      <small>ราคาทุน: ${p.cost} บาท</small><br>
-      ราคาขายต่อชิ้น
-      <input class="bill-price" type="number" value="${unitPrice}"
-        onchange="changeSellPrice(${index},this.value)">
-      จำนวน ${c.qty} ชิ้น = <b>${sum} บาท</b>
+    html += `<div class="item" style="border-left:5px solid #d73737;background:#f9fbff;padding:12px;border-radius:10px">
+      <b style="font-size:16px;color:#163b5c">${p.name}</b><br>
+      <div style="font-size:13px;line-height:1.6;margin:6px 0">
+        🚘 <b>ยี่ห้อรถ:</b> ${p.brand || "-"}<br>
+        🚗 <b>รุ่นรถ:</b> ${p.model || "-"}<br>
+        📅 <b>ปีรถ:</b> ${p.year || "-"}<br>
+        💰 <span style="color:#14824a"><b>ราคาทุน:</b> ${p.cost} บาท</span>
+      </div>
+
+      <div style="margin-top:8px">
+        <span style="font-size:13px;color:#666">ราคาขายต่อชิ้น</span>
+        <input class="bill-price" type="number" value="${unitPrice}"
+          onchange="changeSellPrice(${index},this.value)">
+      </div>
+
+      <div style="margin:8px 0;font-weight:bold;color:#d73737">
+        จำนวน ${c.qty} ชิ้น = ${sum} บาท
+      </div>
+
       <div class="grid">
-        <button onclick="qtyChange(${index},-1)">-1</button>
-        <button onclick="qtyChange(${index},1)">+1</button>
+        <button onclick="qtyChange(${index},-1)">➖ ลด 1</button>
+        <button onclick="qtyChange(${index},1)">➕ เพิ่ม 1</button>
       </div>
     </div>`;
   });
