@@ -40,7 +40,7 @@ button{border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px}
 #bill{display:none}
 @media(max-width:1050px){.sale-bar{grid-template-columns:1fr 1fr}.sale-total{justify-content:flex-start}.workspace{grid-template-columns:1fr}.cart-panel{position:static}}
 @media(max-width:650px){.app{padding:9px}.topbar{padding:0 13px}.status{display:none}.sale-bar{grid-template-columns:1fr;padding:12px}.sale-customer{display:block}.sale-customer label{display:block;margin-bottom:5px}.sale-total{justify-content:space-between}.checkout{width:100%}.form-grid{grid-template-columns:1fr 1fr}.product-list{max-height:none}}
-@media print{body *{visibility:hidden}#bill,#bill *{visibility:visible}#bill{display:block;position:absolute;left:0;top:0;width:58mm;font-size:12px}}
+@media print{@page{size:58mm auto;margin:0}body *{visibility:hidden}#bill,#bill *{visibility:visible}#bill{display:block;position:absolute;left:0;top:0;width:58mm;max-width:58mm;padding:2mm;font-size:12px;line-height:1.35;word-break:break-word}}
 </style>
 </head>
 <body>
@@ -347,7 +347,7 @@ async function printBill(){
   cart.forEach(c=>{
     const p=items[c.id], sum=p.price*c.qty;
     total+=sum;
-    p.stock-=c.qty;
+    p.stock=Math.max(0,p.stock-c.qty);
     billHTML += `${p.name}<br>`;
     billHTML += `รุ่นรถ : ${p.model||"-"} | ปี : ${p.year||"-"}<br>`;
     billHTML += `${c.qty} × ${p.price} = ${sum}<br>`;
