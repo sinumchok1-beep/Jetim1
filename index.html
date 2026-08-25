@@ -165,7 +165,8 @@ function showProducts(){
   let html="";
   items.forEach((p,i)=>{
     const text=normalizeText(p.name+" "+p.brand+" "+p.model+" "+p.year);
-    let ok=!key || text.includes(key);
+    // ยังไม่พิมพ์ค้นหา: ไม่แสดงรายการสินค้าทั้งหมด
+    let ok=!!key && text.includes(key);
     if(key){
       const rawWords = keyRaw.toLowerCase()
         .replace(/โตโยต้า/g,"toyota")
@@ -192,7 +193,9 @@ function showProducts(){
       </div>`;
     }
   });
-  document.getElementById("products").innerHTML=html||"ไม่มีสินค้า";
+  document.getElementById("products").innerHTML = key
+    ? (html || "ไม่มีสินค้าที่ค้นหา")
+    : "";
 }
 
 async function editProduct(i){
