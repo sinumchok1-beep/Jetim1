@@ -33,7 +33,7 @@ button{border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px}
 .item b{font-size:15px}.item .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}
 .item button{height:36px;background:#eaf4ff;color:#1266b1}.item button:hover{background:#dceeff}
 .product-actions{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;margin-top:7px}.product-actions button{color:#fff;background:var(--blue)}.product-actions .edit{background:#ee8a18}.product-actions .danger{background:var(--red)}
-.cart-panel{position:sticky;top:10px}.cart-list{min-height:150px;max-height:440px;overflow:auto}.cart-list .item{background:#f8fbff;border-color:#d9e7f3}.cart-list .item button{background:#dceeff;color:#1266b1}
+.cart-panel{position:sticky;top:10px}.cart-list{min-height:150px;max-height:440px;overflow:auto}.cart-list .item{background:#f8fbff;border-color:#d9e7f3}.cart-list .item button{background:#dceeff;color:#1266b1}.bill-price{height:38px;margin:6px 0;width:160px}
 .cart-footer{border-top:1px solid var(--line);margin-top:10px;padding-top:12px}.sum-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.sum-row span{color:var(--muted)}.sum-row strong{font-size:25px;color:var(--red)}
 .inventory-panel{margin-top:14px}.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.save-product{height:42px;background:var(--blue);color:#fff}
 .muted{color:var(--muted);font-size:13px}
@@ -305,16 +305,20 @@ function drawCart(){
   let total=0, html="";
   cart.forEach((c,index)=>{
     const p=items[c.id];
-    const sum=p.price*c.qty;
+    const unitPrice=Number(p.billPrice ?? p.price);
+    const sum=unitPrice*c.qty;
     total+=sum;
     html += `<div class="item">
       ${p.name}<br>
-      ราคาขาย: <b>${p.price} บาท/ชิ้น</b><br>${c.qty} × ${p.price} = <b>${sum}</b>
+      <label style="font-size:13px;font-weight:700">ราคาขายก่อนพิมพ์:</label>
+      <input class="bill-price" type="number" min="0" step="0.01"
+        value="${unitPrice}" onchange="changeBillPrice(${index}, this.value)">
       <div style="margin-top:6px;font-size:14px;color:#555">
         🚘 ยี่ห้อ: ${p.brand || "-"}<br>
         รุ่นรถ: ${p.model || "-"}<br>
         ปีรถ: ${p.year || "-"}<br>
-        ราคาขายต่อชิ้น: ${p.price} บาท<br>
+        ราคาขายในบิล: <b>${unitPrice} บาท/ชิ้น</b><br>
+        รวมรายการ: <b>${sum} บาท</b><br>
         คงเหลือในสต็อก: ${p.stock} ชิ้น
       </div>
       <div class="grid">
@@ -324,13 +328,10 @@ function drawCart(){
     </div>`;
   });
   document.getElementById("cart").innerHTML=html||"<div class=\"muted\" style=\"padding:18px 4px;text-align:center\">ยังไม่มีสินค้าในบิล<br>เลือกสินค้าแล้วกด “เพิ่มลงบิล”</div>";
-  const totalEl=document.getElementById("grandTotal2");
-  if(totalEl) totalEl.innerText=total+" บาท";
+  document.getElementById("grandTotal2").innerText=total+" บาท";
   const previewEl=document.getElementById("billPreview");
   if(previewEl) previewEl.innerHTML="";
-}
-
-function qtyChange(i,v){
+}unction qtyChange(i,v){
   const c=cart[i], p=items[c.id];
   if(v>0 && c.qty>=p.stock){ alert("สต็อกไม่พอ"); return; }
   c.qty+=v;
@@ -347,12 +348,13 @@ async function printBill(){
   const customer=customerEl ? customerEl.value.trim() : "";
   if(customer) billHTML += "ลูกค้า : " + customer + "<hr>";
   cart.forEach(c=>{
-    const p=items[c.id], sum=p.price*c.qty;
+    const p=items[c.id], unitPrice=Number(p.billPrice ?? p.price), sum=unitPrice*c.qty;
     total+=sum;
     p.stock=Math.max(0,p.stock-c.qty);
     billHTML += `${p.name}<br>`;
     billHTML += `รุ่นรถ : ${p.model||"-"} | ปี : ${p.year||"-"}<br>`;
-    billHTML += `${c.qty} × ${p.price} = ${sum}<br>`;
+    billHTML += `ราคาขาย: ${unitPrice} บาท/ชิ้น<br>`;
+    billHTML += `${c.qty} × ${unitPrice} = ${sum}<br>`;
   });
   billHTML += `<hr><b>ยอดรวม ${total} บาท</b><br><center>ขอบคุณค่ะ</center>`;
   document.getElementById("bill").innerHTML=billHTML;
@@ -360,6 +362,7 @@ async function printBill(){
   await save();
   window.print();
   document.getElementById("bill").style.display="none";
+  cart.forEach(c=>{ if(items[c.id]) delete items[c.id].billPrice; });
   cart=[];
   drawCart();
 }
