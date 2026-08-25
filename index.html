@@ -312,6 +312,7 @@ function drawCart(){
 
     html += `<div class="item">
       <b>${p.name}</b><br>
+      <small>ราคาทุน: ${p.cost} บาท</small><br>
       ราคาขายต่อชิ้น
       <input class="bill-price" type="number" value="${unitPrice}"
         onchange="changeSellPrice(${index},this.value)">
@@ -343,7 +344,7 @@ function qtyChange(i,v){
 async function printBill(){
   if(cart.length===0){ alert("ยังไม่มีสินค้าในบิล"); return; }
   let total=0;
-  let billHTML="<center><b>เจ๊ติ๋มอะไหล่ซิ่ง</b><br>บิลเงินสด</center><hr>";
+  let billHTML="<center><b>บิลเงินสด</b></center><hr>";
   billHTML += new Date().toLocaleString("th-TH") + "<br>";
   const customerEl=document.getElementById("customer");
   const customer=customerEl ? customerEl.value.trim() : "";
