@@ -309,7 +309,7 @@ function drawCart(){
     total+=sum;
     html += `<div class="item">
       ${p.name}<br>
-      ${c.qty} × ${p.price} = <b>${sum}</b>
+      ราคาขาย: <b>${p.price} บาท/ชิ้น</b><br>${c.qty} × ${p.price} = <b>${sum}</b>
       <div style="margin-top:6px;font-size:14px;color:#555">
         🚘 ยี่ห้อ: ${p.brand || "-"}<br>
         รุ่นรถ: ${p.model || "-"}<br>
