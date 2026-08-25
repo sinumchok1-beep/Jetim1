@@ -182,8 +182,14 @@ async function addProduct(){
   const imageFile = document.getElementById("imageFile").files[0];
   let image = "";
   if(imageFile){
-    if(!imageFile.type.startsWith("image/")){ alert("กรุณาเลือกรูปภาพ"); return; }
-    if(imageFile.size > 900000){ alert("รูปใหญ่เกินไป กรุณาเลือกรูปไม่เกินประมาณ 900 KB"); return; }
+    if(!imageFile.type.startsWith("image/")){
+      alert("กรุณาเลือกไฟล์รูปภาพ");
+      return;
+    }
+    if(imageFile.size > 5 * 1024 * 1024){
+      alert("รูปภาพต้องมีขนาดไม่เกิน 5 MB");
+      return;
+    }
     image = await new Promise((resolve,reject)=>{
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -194,7 +200,7 @@ async function addProduct(){
   const product = {
     id: ref.id,
     name:n,
-    image: image || "",
+    image:image || "",
     brand:document.getElementById("brand").value,
     model:document.getElementById("model").value,
     year:document.getElementById("year").value,
