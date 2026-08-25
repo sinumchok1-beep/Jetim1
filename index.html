@@ -141,16 +141,8 @@ let ready = false;
 async function initOnline(){
   try{
     await firebase.auth().signInAnonymously();
-    const snap = await db.collection("products").get();
+    const snap = await db.collection("products").orderBy("createdAt").get();
     items = snap.docs.map(d => ({id:d.id, ...d.data()}));
-
-    if(items.length===0){
-      const backup = localStorage.getItem("JETIM_PRODUCTS");
-      if(backup){
-        items = JSON.parse(backup);
-      }
-    }
-
     ready = true;
     showProducts();
   }catch(err){
@@ -174,7 +166,6 @@ async function save(){
       batch.set(db.collection("products").doc(p.id), data, {merge:true});
     });
     await batch.commit();
-    localStorage.setItem("JETIM_PRODUCTS", JSON.stringify(items));
     showProducts();
   }catch(err){
     console.error(err);
@@ -199,7 +190,6 @@ async function addProduct(){
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
   items.push(product);
-  localStorage.setItem("JETIM_PRODUCTS", JSON.stringify(items));
   await save();
   document.querySelectorAll("input").forEach(i=>{
     if(i.id!=="search" && i.id!=="customer") i.value="";
@@ -311,36 +301,35 @@ function syncPosTotal(){
   const dst=document.getElementById("grandTotal2");
   if(src && dst) dst.innerText=(src.innerText||"").replace(/^รวม\\s*/,"");
 }
+
 function drawCart(){
   let total=0, html="";
   cart.forEach((c,index)=>{
     const p=items[c.id];
-    const unitPrice=Number(p.billPrice ?? p.price);
-    const sum=unitPrice*c.qty;
-    total+=sum;
+    const unitPrice = Number(c.sellPrice ?? p.price);
+    const sum = unitPrice * c.qty;
+    total += sum;
+
     html += `<div class="item">
-      ${p.name}<br>
-      <label style="font-size:13px;font-weight:700">ราคาขายก่อนพิมพ์:</label>
-      <input class="bill-price" type="number" min="0" step="0.01"
-        value="${unitPrice}" onchange="changeBillPrice(${index}, this.value)">
-      <div style="margin-top:6px;font-size:14px;color:#555">
-        🚘 ยี่ห้อ: ${p.brand || "-"}<br>
-        รุ่นรถ: ${p.model || "-"}<br>
-        ปีรถ: ${p.year || "-"}<br>
-        ราคาขายในบิล: <b>${unitPrice} บาท/ชิ้น</b><br>
-        รวมรายการ: <b>${sum} บาท</b><br>
-        คงเหลือในสต็อก: ${p.stock} ชิ้น
-      </div>
+      <b>${p.name}</b><br>
+      ราคาขายต่อชิ้น
+      <input class="bill-price" type="number" value="${unitPrice}"
+        onchange="changeSellPrice(${index},this.value)">
+      จำนวน ${c.qty} ชิ้น = <b>${sum} บาท</b>
       <div class="grid">
         <button onclick="qtyChange(${index},-1)">-1</button>
         <button onclick="qtyChange(${index},1)">+1</button>
       </div>
     </div>`;
   });
-  document.getElementById("cart").innerHTML=html||"<div class=\"muted\" style=\"padding:18px 4px;text-align:center\">ยังไม่มีสินค้าในบิล<br>เลือกสินค้าแล้วกด “เพิ่มลงบิล”</div>";
-  document.getElementById("grandTotal2").innerText=total+" บาท";
-  const previewEl=document.getElementById("billPreview");
-  if(previewEl) previewEl.innerHTML="";
+
+  document.getElementById("cart").innerHTML = html || '<div class="muted">ยังไม่มีสินค้าในบิล</div>';
+  document.getElementById("grandTotal2").innerText = total + " บาท";
+}
+
+function changeSellPrice(index,value){
+  cart[index].sellPrice = Number(value)||0;
+  drawCart();
 }
 
 function qtyChange(i,v){
@@ -360,7 +349,7 @@ async function printBill(){
   const customer=customerEl ? customerEl.value.trim() : "";
   if(customer) billHTML += "ลูกค้า : " + customer + "<hr>";
   cart.forEach(c=>{
-    const p=items[c.id], unitPrice=Number(p.billPrice ?? p.price), sum=unitPrice*c.qty;
+    const p=items[c.id], unitPrice=Number(c.sellPrice ?? p.price), sum=unitPrice*c.qty;
     total+=sum;
     p.stock=Math.max(0,p.stock-c.qty);
     billHTML += `${p.name}<br>`;
