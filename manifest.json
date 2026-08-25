@@ -1,0 +1,8 @@
+{
+  "name": "เจ้ติ๋มอะไหล่รถยนต์ POS",
+  "short_name": "Jetim POS",
+  "start_url": "/Jetim1/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0F9D58"
+}
