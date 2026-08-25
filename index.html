@@ -31,6 +31,16 @@ button{background:#0057d9;color:#fff;border:none;font-weight:bold}
 <h3>ค้นหาสินค้า</h3>
 <input id="search" placeholder="พิมพ์บางคำได้" oninput="showProducts()">
 <div id="products"></div>
+<div class="card">
+<h3>🧾 ออกบิลเงินสด</h3>
+<input id="customer" placeholder="ชื่อลูกค้า (ไม่บังคับ)">
+<div id="cart"></div>
+<div class="total" id="grandTotal">รวม 0 บาท</div>
+<button onclick="printBill()">🖨️ ออกบิลเงินสด 58mm</button>
+</div>
+
+<div id="bill"></div>
+
 </div>
 
 <div class="card">
@@ -51,15 +61,7 @@ button{background:#0057d9;color:#fff;border:none;font-weight:bold}
 <button onclick="addProduct()">บันทึกสินค้า</button>
 </div>
 
-<div class="card">
-<h3>🧾 ออกบิลเงินสด</h3>
-<input id="customer" placeholder="ชื่อลูกค้า (ไม่บังคับ)">
-<div id="cart"></div>
-<div class="total" id="grandTotal">รวม 0 บาท</div>
-<button onclick="printBill()">🖨️ ออกบิลเงินสด 58mm</button>
-</div>
 
-<div id="bill"></div>
 
 </div>
 
@@ -184,12 +186,27 @@ function showProducts(){
           <button onclick="stock(${i},1)">+1</button>
           <button onclick="stock(${i},5)">+5</button>
         </div>
+        <button onclick="editProduct(${i})" style="background:#f57c00">✏️ แก้รายละเอียดสินค้า</button>
         <button onclick="addCart(${i})">➕ เพิ่มลงบิล</button>
         <button onclick="deleteProduct(${i})" style="background:#d32f2f">🗑️ ลบสินค้า</button>
       </div>`;
     }
   });
   document.getElementById("products").innerHTML=html||"ไม่มีสินค้า";
+}
+
+async function editProduct(i){
+  const p=items[i]; if(!p) return;
+  const name=prompt("ชื่ออะไหล่",p.name||""); if(name===null) return;
+  if(!name.trim()){alert("กรอกชื่อสินค้า");return;}
+  const brand=prompt("ยี่ห้อรถ",p.brand||""); if(brand===null)return;
+  const model=prompt("รุ่นรถ",p.model||""); if(model===null)return;
+  const year=prompt("ปีรถ",p.year||""); if(year===null)return;
+  const cost=Number(prompt("ราคาทุน",p.cost??0)); if(!Number.isFinite(cost)||cost<0){alert("ราคาทุนไม่ถูกต้อง");return;}
+  const price=Number(prompt("ราคาขาย",p.price??0)); if(!Number.isFinite(price)||price<0){alert("ราคาขายไม่ถูกต้อง");return;}
+  const stockValue=Number(prompt("จำนวนสต็อก",p.stock??0)); if(!Number.isFinite(stockValue)||stockValue<0){alert("สต็อกไม่ถูกต้อง");return;}
+  Object.assign(p,{name:name.trim(),brand,model,year,cost,price,stock:stockValue});
+  await save(); drawCart(); alert("แก้รายละเอียดสินค้าเรียบร้อย");
 }
 
 function deleteProduct(i){
