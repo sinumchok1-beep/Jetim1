@@ -6,65 +6,112 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>เจ๊ติ๋มอะไหล่ซิ่ง</title>
 <style>
-body{font-family:Arial;background:#eef3f8;margin:0}
-header{background:#003b8e;color:#fff;padding:14px;font-size:22px;font-weight:bold}
-.wrap{max-width:900px;margin:auto;padding:12px}
-.card{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px}
-input,button{width:100%;padding:10px;margin:5px 0;border-radius:8px;border:1px solid #ccc;box-sizing:border-box}
-button{background:#0057d9;color:#fff;border:none;font-weight:bold}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.item{border:1px solid #ddd;padding:10px;border-radius:10px;margin-top:8px}
-.total{font-size:24px;color:#d32f2f;font-weight:bold}
+*{box-sizing:border-box}
+body{font-family:Arial,'Noto Sans Thai',sans-serif;background:#f3f5f8;margin:0;color:#263238}
+header{background:#123b63;color:#fff;padding:14px 18px;font-size:22px;font-weight:700;box-shadow:0 2px 8px #0002}
+.wrap{max-width:1200px;margin:auto;padding:14px}
+.pos-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(320px,.85fr);gap:14px;align-items:start}
+.card{background:#fff;border:1px solid #e1e6eb;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 2px 8px #0000000a}
+.card h3{margin:0 0 12px;font-size:18px}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.muted{font-size:13px;color:#68747d}
+input,button{width:100%;padding:11px;margin:4px 0;border-radius:9px;border:1px solid #ccd4db;box-sizing:border-box;font-size:15px}
+input:focus{outline:2px solid #b8d6f5;border-color:#3787d8}
+button{background:#1266b1;color:#fff;border:none;font-weight:700;cursor:pointer}
+button:hover{filter:brightness(.96)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.item{border:1px solid #e0e5ea;padding:11px;border-radius:10px;margin-top:8px;background:#fbfcfd}
+.item b{font-size:16px}
+.product-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+.product-actions button:last-child{grid-column:1/-1}
+.cart-card{position:sticky;top:10px}
+#cart{max-height:54vh;overflow:auto;padding-right:2px}
+#cart .item{background:#f8fbff;border-color:#d8e7f5}
+.total-box{border-top:2px solid #e8edf2;margin-top:12px;padding-top:12px}
+.total{font-size:25px;color:#d32f2f;font-weight:800;text-align:right;margin:4px 0 10px}
+.customer-label{font-size:13px;font-weight:700;color:#4d5962;margin-top:8px;display:block}
+.primary-bill{font-size:17px;padding:13px;background:#0b7a45}
+.search-card{margin-bottom:14px}
+.add-card{margin-top:0}
+#products{max-height:58vh;overflow:auto}
+.danger{background:#d32f2f!important}
+.edit{background:#f57c00!important}
 #bill{display:none}
+@media(max-width:850px){
+  .pos-layout{grid-template-columns:1fr}
+  .cart-card{position:static}
+  #cart{max-height:none}
+  #products{max-height:none}
+}
 @media print{
- body *{visibility:hidden}
- #bill,#bill *{visibility:visible}
- #bill{display:block;position:absolute;left:0;top:0;width:58mm;font-size:12px}
+  body *{visibility:hidden}
+  #bill,#bill *{visibility:visible}
+  #bill{display:block;position:absolute;left:0;top:0;width:58mm;font-size:12px}
 }
 </style>
 </head>
 <body>
-<header>🚗 เจ๊ติ๋มอะไหล่ซิ่ง</header>
+<header>🚗 เจ๊ติ๋มอะไหล่ซิ่ง <span style="font-size:13px;font-weight:400;opacity:.85">POS ขายหน้าร้าน</span></header>
 <div class="wrap">
 
-<div class="card">
-<h3>ค้นหาสินค้า</h3>
-<input id="search" placeholder="พิมพ์บางคำได้" oninput="showProducts()">
-<div id="products"></div>
-<div class="card">
-<h3>🧾 ออกบิลเงินสด</h3>
-<input id="customer" placeholder="ชื่อลูกค้า (ไม่บังคับ)">
-<div id="cart"></div>
-<div class="total" id="grandTotal">รวม 0 บาท</div>
-<button onclick="printBill()">🖨️ ออกบิลเงินสด 58mm</button>
-</div>
+    <!-- ฝั่งขวา: บิล -->
+    <aside>
+      <div class="card cart-card">
+        <div class="section-title">
+          <h3>🧾 บิลขาย</h3>
+          <span class="muted">รายการปัจจุบัน</span>
+        </div>
+        <label class="customer-label" for="customer">ชื่อลูกค้า (ไม่บังคับ)</label>
+        <input id="customer" placeholder="ระบุชื่อลูกค้า">
+        <div id="cart"></div>
+        <div class="total-box">
+          <div class="total" id="grandTotal">รวม 0 บาท</div>
+          <button class="primary-bill" onclick="printBill()">🖨️ ออกบิลเงินสด 58mm</button>
+        </div>
+      </div>
+    </aside>
 
-<div id="bill"></div>
+  <div class="pos-layout">
 
-</div>
+    <!-- ฝั่งซ้าย: ค้นหา + รายการสินค้า + เพิ่มสินค้า -->
+    <main>
+      <div class="card search-card">
+        <div class="section-title">
+          <h3>🔎 ค้นหาสินค้า</h3>
+          <span class="muted">ค้นด้วยชื่อ / ยี่ห้อ / รุ่น / ปี</span>
+        </div>
+        <input id="search" placeholder="พิมพ์บางคำได้ เช่น D-Max, Vigo, Toyota" oninput="showProducts()" autofocus>
+        <div id="products"></div>
+      </div>
 
-<div class="card">
-<h3>เพิ่มสินค้า</h3>
-<input id="name" placeholder="ชื่ออะไหล่">
-<div class="grid">
-<input id="brand" placeholder="ยี่ห้อรถ">
-<input id="model" placeholder="รุ่นรถ">
-</div>
-<div class="grid">
-<input id="year" placeholder="ปีรถ">
-<input id="cost" type="number" placeholder="ราคาทุน">
-</div>
-<div class="grid">
-<input id="price" type="number" placeholder="ราคาขาย">
-<input id="stock" type="number" placeholder="สต็อก">
-</div>
-<button onclick="addProduct()">บันทึกสินค้า</button>
-</div>
+      <div class="card add-card">
+        <div class="section-title">
+          <h3>➕ เพิ่มสินค้า</h3>
+          <span class="muted">ข้อมูลสินค้าและสต็อก</span>
+        </div>
+        <input id="name" placeholder="ชื่ออะไหล่">
+        <div class="grid">
+          <input id="brand" placeholder="ยี่ห้อรถ">
+          <input id="model" placeholder="รุ่นรถ">
+        </div>
+        <div class="grid">
+          <input id="year" placeholder="ปีรถ">
+          <input id="cost" type="number" placeholder="ราคาทุน">
+        </div>
+        <div class="grid">
+          <input id="price" type="number" placeholder="ราคาขาย">
+          <input id="stock" type="number" placeholder="สต็อก">
+        </div>
+        <button onclick="addProduct()">💾 บันทึกสินค้า</button>
+      </div>
+    </main>
 
 
 
-</div>
+  </div>
 
+  <div id="bill"></div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -184,12 +231,14 @@ function showProducts(){
         ต้นทุน ${p.cost} | ขาย ${p.price}<br>
         คงเหลือ ${p.stock} ชิ้น
         <div class="grid">
-          <button onclick="stock(${i},1)">+1</button>
-          <button onclick="stock(${i},5)">+5</button>
+          <button onclick="stock(${i},1)">สต็อก +1</button>
+          <button onclick="stock(${i},5)">สต็อก +5</button>
         </div>
-        <button onclick="editProduct(${i})" style="background:#f57c00">✏️ แก้รายละเอียดสินค้า</button>
-        <button onclick="addCart(${i})">➕ เพิ่มลงบิล</button>
-        <button onclick="deleteProduct(${i})" style="background:#d32f2f">🗑️ ลบสินค้า</button>
+        <div class="product-actions">
+          <button onclick="addCart(${i})">➕ เพิ่มลงบิล</button>
+          <button class="edit" onclick="editProduct(${i})">✏️ แก้รายละเอียด</button>
+          <button class="danger" onclick="deleteProduct(${i})">🗑️ ลบสินค้า</button>
+        </div>
       </div>`;
     }
   });
@@ -263,7 +312,7 @@ function drawCart(){
       </div>
     </div>`;
   });
-  document.getElementById("cart").innerHTML=html||"ยังไม่มีสินค้าในบิล";
+  document.getElementById("cart").innerHTML=html||"<div class=\"muted\" style=\"padding:18px 4px;text-align:center\">ยังไม่มีสินค้าในบิล<br>เลือกสินค้าแล้วกด “เพิ่มลงบิล”</div>";
   document.getElementById("grandTotal").innerText="รวม "+total+" บาท";
   const previewEl=document.getElementById("billPreview");
   if(previewEl) previewEl.innerHTML="";
