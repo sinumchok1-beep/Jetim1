@@ -112,7 +112,6 @@ button{border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px}
       <input id="cost" type="number" placeholder="ราคาทุน">
       <input id="price" type="number" placeholder="ราคาขาย">
       <input id="stock" type="number" placeholder="สต็อก">
-      <input id="imageFile" type="file" accept="image/*" capture="environment" style="height:42px;padding:9px 12px">
       <button class="save-product" onclick="addProduct()">💾 บันทึกสินค้า</button>
     </div>
   </section>
@@ -179,28 +178,9 @@ async function addProduct(){
   const n=document.getElementById("name").value.trim();
   if(!n){ alert("กรอกชื่อสินค้า"); return; }
   const ref = db.collection("products").doc();
-  const imageFile = document.getElementById("imageFile").files[0];
-  let image = "";
-  if(imageFile){
-    if(!imageFile.type.startsWith("image/")){
-      alert("กรุณาเลือกไฟล์รูปภาพ");
-      return;
-    }
-    if(imageFile.size > 5 * 1024 * 1024){
-      alert("รูปภาพต้องมีขนาดไม่เกิน 5 MB");
-      return;
-    }
-    image = await new Promise((resolve,reject)=>{
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(imageFile);
-    });
-  }
   const product = {
     id: ref.id,
     name:n,
-    image:image || "",
     brand:document.getElementById("brand").value,
     model:document.getElementById("model").value,
     year:document.getElementById("year").value,
@@ -252,7 +232,6 @@ function showProducts(){
     }
     if(ok){
       html+=`<div class="item">
-        ${p.image ? `<img src="${p.image}" alt="รูปตัวอย่าง" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line);margin-bottom:7px">` : ""}
         <b>${p.name}</b><br>
         🚘 ${p.brand||""} ${p.model||""} ปี ${p.year||""}<br>
         ต้นทุน ${p.cost} | ขาย ${p.price}<br>
