@@ -112,6 +112,7 @@ button{border:0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px}
       <input id="cost" type="number" placeholder="ราคาทุน">
       <input id="price" type="number" placeholder="ราคาขาย">
       <input id="stock" type="number" placeholder="สต็อก">
+      <input id="imageFile" type="file" accept="image/*" capture="environment" style="height:42px;padding:9px 12px">
       <button class="save-product" onclick="addProduct()">💾 บันทึกสินค้า</button>
     </div>
   </section>
@@ -173,14 +174,68 @@ async function save(){
   }
 }
 
+async function compressImage(file, maxBytes){
+  if(file.size <= maxBytes) return await fileToDataURL(file);
+  const bitmap = await createImageBitmap(file);
+  const maxSide = 1600;
+  let w = bitmap.width, h = bitmap.height;
+  if(Math.max(w,h) > maxSide){
+    const scale = maxSide / Math.max(w,h);
+    w = Math.round(w * scale);
+    h = Math.round(h * scale);
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap,0,0,w,h);
+  let quality = 0.85;
+  let dataUrl = canvas.toDataURL("image/jpeg", quality);
+  while(dataUrl.length * 0.75 > maxBytes && quality > 0.25){
+    quality -= 0.05;
+    dataUrl = canvas.toDataURL("image/jpeg", quality);
+  }
+  if(dataUrl.length * 0.75 > maxBytes){
+    let scale = 0.85;
+    while(dataUrl.length * 0.75 > maxBytes && scale > 0.35){
+      w = Math.max(320, Math.round(w * scale));
+      h = Math.max(320, Math.round(h * scale));
+      canvas.width = w; canvas.height = h;
+      ctx.drawImage(bitmap,0,0,w,h);
+      quality = 0.7;
+      dataUrl = canvas.toDataURL("image/jpeg", quality);
+      scale -= 0.08;
+    }
+  }
+  return dataUrl;
+}
+
+function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 async function addProduct(){
   if(!ready){ alert("กำลังเชื่อมต่อฐานข้อมูล รอสักครู่"); return; }
   const n=document.getElementById("name").value.trim();
   if(!n){ alert("กรอกชื่อสินค้า"); return; }
   const ref = db.collection("products").doc();
+  const imageFile = document.getElementById("imageFile").files[0];
+  let image = "";
+  if(imageFile){
+    if(!imageFile.type.startsWith("image/")){
+      alert("กรุณาเลือกไฟล์รูปภาพ");
+      return;
+    }
+    image = await compressImage(imageFile, 900 * 1024);
+  }
   const product = {
     id: ref.id,
     name:n,
+    image:image || "",
     brand:document.getElementById("brand").value,
     model:document.getElementById("model").value,
     year:document.getElementById("year").value,
@@ -232,6 +287,7 @@ function showProducts(){
     }
     if(ok){
       html+=`<div class="item">
+        ${p.image ? `<img src="${p.image}" alt="รูปตัวอย่าง" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line);margin-bottom:7px">` : ""}
         <b>${p.name}</b><br>
         🚘 ${p.brand||""} ${p.model||""} ปี ${p.year||""}<br>
         ต้นทุน ${p.cost} | ขาย ${p.price}<br>
