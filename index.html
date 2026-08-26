@@ -142,11 +142,13 @@ let ready = false;
 async function initOnline(){
   try{
     await firebase.auth().signInAnonymously();
+    const snap = await db.collection("products").orderBy("createdAt").get();
+    items = snap.docs.map(d => ({id:d.id, ...d.data()}));
     ready = true;
     showProducts();
   }catch(err){
     console.error(err);
-    alert("เชื่อมต่อฐานข้อมูลไม่ได้");
+    alert("เชื่อมต่อฐานข้อมูลไม่ได้ กรุณาเปิด Firestore และ Anonymous Sign-in ใน Firebase ก่อน");
   }
 }
 
@@ -264,45 +266,49 @@ function normalizeText(text){
     .replace(/[^a-z0-9ก-๙]+/g,"");
 }
 
-async function showProducts(){
-  if(!ready) return;
-  const keyRaw = document.getElementById("search").value.trim();
-  if(!keyRaw){
-    document.getElementById("products").innerHTML="";
-    items=[];
+function showProducts(){
+  if(!document.getElementById("search")) return;
+  const keyRaw=document.getElementById("search").value;
+  const key=normalizeText(keyRaw);
+  let html="";
+  items.forEach((p,i)=>{
+    const text=normalizeText(p.name+" "+p.brand+" "+p.model+" "+p.year);
+    // ยังไม่พิมพ์ค้นหา: ไม่แสดงรายการสินค้าทั้งหมด
+    let ok=!!key && text.includes(key);
+    if(key){
+      const rawWords = keyRaw.toLowerCase()
+        .replace(/โตโยต้า/g,"toyota")
+        .replace(/วีโก้/g,"vigo")
+        .replace(/อีซูซุ/g,"isuzu")
+        .replace(/ฮอนด้า/g,"honda")
+        .replace(/d-max/g,"dmax")
+        .match(/[a-z0-9ก-๙]+/g) || [];
+      ok = rawWords.every(word => normalizeText(text).includes(normalizeText(word)));
+    }
+    if(ok){
+      html+=`<div class="item">
+        ${p.image ? `<img src="${p.image}" alt="รูปตัวอย่าง" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line);margin-bottom:7px">` : ""}
+        <b>${p.name}</b><br>
+        🚘 ${p.brand||""} ${p.model||""} ปี ${p.year||""}<br>
+        ต้นทุน ${p.cost} | ขาย ${p.price}<br>
+        คงเหลือ ${p.stock} ชิ้น
+        <div class="grid">
+          <button onclick="stock(${i},1)">สต็อก +1</button>
+          <button onclick="stock(${i},5)">สต็อก +5</button>
+        </div>
+        <div class="product-actions">
+          <button onclick="addCart(${i})">➕ เพิ่มลงบิล</button>
+          <button class="edit" onclick="editProduct(${i})">✏️ แก้รายละเอียด</button>
+          <button class="danger" onclick="deleteProduct(${i})">🗑️ ลบสินค้า</button>
+        </div>
+      </div>`;
+    }
+  });
+  // ถ้าลบข้อความค้นหาจนว่าง ให้ซ่อนสินค้าทั้งหมดทันที
+  if(!keyRaw.trim()){
+    document.getElementById("products").innerHTML = "";
     return;
   }
-
-  const words = keyRaw.toLowerCase().replace(/d-max/g,"dmax").split(/\s+/).filter(Boolean);
-
-  const snap = await db.collection("products").limit(300).get();
-  items = snap.docs.map(d=>({id:d.id,...d.data()}));
-
-  const result = items.filter(p=>{
-    const text=(p.name+" "+(p.brand||"")+" "+(p.model||"")+" "+(p.year||""))
-      .toLowerCase().replace(/d-max/g,"dmax");
-    return words.every(w=>text.includes(w));
-  });
-
-  let html="";
-  result.forEach((p,i)=>{
-    html += `<div class="item">
-      ${p.image?`<img src="${p.image}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid #ddd;margin-bottom:7px">`:""}
-      <b>${p.name}</b><br>
-      🚘 ${p.brand||""} ${p.model||""} ปี ${p.year||""}<br>
-      ต้นทุน ${p.cost} | ขาย ${p.price}<br>
-      คงเหลือ ${p.stock} ชิ้น
-      <div class="grid">
-        <button onclick="stock(${i},1)">สต็อก +1</button>
-        <button onclick="stock(${i},5)">สต็อก +5</button>
-      </div>
-      <div class="product-actions">
-        <button onclick="addCart(${i})">➕ เพิ่มลงบิล</button>
-        <button class="edit" onclick="editProduct(${i})">✏️ แก้รายละเอียด</button>
-        <button class="danger" onclick="deleteProduct(${i})">🗑️ ลบสินค้า</button>
-      </div>
-    </div>`;
-  });
 
   document.getElementById("products").innerHTML = html || "ไม่มีสินค้าที่ค้นหา";
 }
